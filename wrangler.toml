@@ -11,3 +11,5 @@
 
 name = "crossword"
 pages_build_output_dir = "public"
+# wrangler.toml
+name = 'artresidencymoident'
