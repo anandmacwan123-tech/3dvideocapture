@@ -1,0 +1,11 @@
+{
+  "name": "crossword-layout-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A grid-based type tool for building crossword-style lettering layouts.",
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes serve@14 . -l 8080",
+    "deploy": "npx --yes wrangler@latest pages deploy . --project-name crossword"
+  }
+}

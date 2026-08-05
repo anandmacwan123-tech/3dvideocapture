@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crossword — layout tool</title>
+<meta name="description" content="A grid-based type tool for building crossword-style lettering layouts.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='16' y='23' font-family='Helvetica,Arial' font-size='22' font-weight='700' text-anchor='middle' fill='%231d1d1f'%3EC%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="fonts/HelveticaNowDisplay-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__brand">
+    <span class="wordmark" aria-hidden="true">
+      <b>C</b><b>R</b><b>O</b><b>S</b><b>S</b><b>W</b><b>O</b><b>R</b><b>D</b>
+    </span>
+    <span class="topbar__sub">Layout tool</span>
+  </div>
+
+  <div class="topbar__actions">
+    <button class="btn btn--utility" id="btnHelp" type="button" aria-haspopup="dialog">Shortcuts</button>
+    <button class="btn btn--utility" id="btnLoad" type="button">Open</button>
+    <button class="btn btn--utility" id="btnSave" type="button">Save</button>
+    <button class="btn btn--primary" id="btnExport" type="button" aria-haspopup="dialog">Export</button>
+  </div>
+</header>
+
+<main class="shell">
+
+  <!-- ────────────────────────────  CONTROLS  ──────────────────────────── -->
+  <aside class="panel" id="panel" aria-label="Layout controls">
+
+    <section class="group">
+      <h2 class="group__title">Grid</h2>
+
+      <div class="field" data-field="cols">
+        <div class="field__head"><label for="colsNum">Columns</label>
+          <input class="num" type="number" id="colsNum" min="1" max="120" step="1"></div>
+        <input class="range" type="range" id="colsRange" min="1" max="120" step="1" aria-label="Columns">
+      </div>
+
+      <div class="field" data-field="rows">
+        <div class="field__head"><label for="rowsNum">Rows</label>
+          <input class="num" type="number" id="rowsNum" min="1" max="120" step="1"></div>
+        <input class="range" type="range" id="rowsRange" min="1" max="120" step="1" aria-label="Rows">
+      </div>
+
+      <button class="btn btn--ghost btn--block" id="btnTrim" type="button" title="Shrink the grid to the letters you have placed">Trim to content</button>
+    </section>
+
+    <section class="group">
+      <h2 class="group__title">Cell
+        <button class="lockbtn is-on" id="btnLink" type="button" aria-pressed="true" title="Link width and height">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.4 9.6a2.4 2.4 0 0 0 3.4 0l2.4-2.4a2.4 2.4 0 0 0-3.4-3.4l-.9.9M9.6 6.4a2.4 2.4 0 0 0-3.4 0L3.8 8.8a2.4 2.4 0 0 0 3.4 3.4l.9-.9"/></svg>
+          <span class="sr-only">Link cell width and height</span>
+        </button>
+      </h2>
+
+      <div class="field" data-field="cellW">
+        <div class="field__head"><label for="cellWNum">Width</label>
+          <input class="num" type="number" id="cellWNum" min="4" max="200" step="1"></div>
+        <input class="range" type="range" id="cellWRange" min="4" max="200" step="1" aria-label="Cell width">
+      </div>
+
+      <div class="field" data-field="cellH">
+        <div class="field__head"><label for="cellHNum">Height</label>
+          <input class="num" type="number" id="cellHNum" min="4" max="200" step="1"></div>
+        <input class="range" type="range" id="cellHRange" min="4" max="200" step="1" aria-label="Cell height">
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 class="group__title">Type</h2>
+
+      <div class="field" data-field="fontSize">
+        <div class="field__head"><label for="fontSizeNum">Size</label>
+          <input class="num" type="number" id="fontSizeNum" min="4" max="200" step="1"></div>
+        <input class="range" type="range" id="fontSizeRange" min="4" max="200" step="1" aria-label="Font size">
+      </div>
+
+      <div class="field" data-field="baseline">
+        <div class="field__head"><label for="baselineNum">Baseline shift</label>
+          <input class="num" type="number" id="baselineNum" min="-50" max="50" step="0.5"></div>
+        <input class="range" type="range" id="baselineRange" min="-50" max="50" step="0.5" aria-label="Baseline shift">
+      </div>
+
+      <label class="check"><input type="checkbox" id="chkUpper" checked><span>Force uppercase</span></label>
+    </section>
+
+    <section class="group">
+      <h2 class="group__title">Colour</h2>
+
+      <div class="swatches" id="swatches" role="group" aria-label="Letter colour"></div>
+
+      <div class="row">
+        <label class="colorfield">
+          <input type="color" id="inkCustom" aria-label="Custom letter colour">
+          <span>Letter</span>
+        </label>
+        <label class="colorfield">
+          <input type="color" id="bgColor" aria-label="Background colour">
+          <span>Ground</span>
+        </label>
+      </div>
+
+      <label class="check"><input type="checkbox" id="chkTransparent"><span>Transparent ground</span></label>
+      <p class="hint">Picking a colour recolours the current selection. With nothing selected it sets the colour for whatever you type next.</p>
+    </section>
+
+    <section class="group">
+      <h2 class="group__title">Canvas</h2>
+
+      <div class="field" data-field="pad">
+        <div class="field__head"><label for="padNum">Margin</label>
+          <input class="num" type="number" id="padNum" min="0" max="400" step="1"></div>
+        <input class="range" type="range" id="padRange" min="0" max="400" step="1" aria-label="Canvas margin">
+      </div>
+
+      <div class="field" data-field="zoom">
+        <div class="field__head"><label for="zoomNum">Zoom %</label>
+          <input class="num" type="number" id="zoomNum" min="10" max="400" step="1"></div>
+        <input class="range" type="range" id="zoomRange" min="10" max="400" step="1" aria-label="Zoom">
+      </div>
+
+      <button class="btn btn--ghost btn--block" id="btnFit" type="button">Fit to view</button>
+      <label class="check"><input type="checkbox" id="chkGuides" checked><span>Show grid guides</span></label>
+      <label class="check"><input type="checkbox" id="chkNumbers"><span>Show clue numbers</span></label>
+    </section>
+
+    <section class="group group--last">
+      <button class="btn btn--ghost btn--block" id="btnClear" type="button">Clear all letters</button>
+    </section>
+  </aside>
+
+  <!-- ────────────────────────────  STAGE  ──────────────────────────── -->
+  <section class="stage" id="stage" aria-label="Layout canvas">
+    <div class="stage__scroll" id="stageScroll">
+      <div class="stage__holder" id="stageHolder">
+        <svg id="board" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Crossword layout"></svg>
+      </div>
+    </div>
+
+    <input id="keyproxy" class="keyproxy" autocomplete="off" autocorrect="off" autocapitalize="characters"
+           spellcheck="false" aria-label="Type letters into the grid" inputmode="text">
+
+    <div class="statusbar">
+      <span id="statCoord">R1 · C1</span>
+      <span class="statusbar__sep"></span>
+      <span id="statDir">Across</span>
+      <span class="statusbar__sep"></span>
+      <span id="statSize">—</span>
+      <span class="statusbar__grow"></span>
+      <span id="statSaved" class="statusbar__muted"></span>
+    </div>
+  </section>
+</main>
+
+<!-- ────────────────────────────  EXPORT DIALOG  ──────────────────────────── -->
+<dialog class="sheet" id="dlgExport" aria-labelledby="dlgExportTitle">
+  <form method="dialog" class="sheet__inner">
+    <h2 class="sheet__title" id="dlgExportTitle">Export</h2>
+
+    <div class="seg" role="group" aria-label="Format">
+      <button type="button" class="seg__btn is-on" data-fmt="svg">SVG</button>
+      <button type="button" class="seg__btn" data-fmt="png">PNG</button>
+      <button type="button" class="seg__btn" data-fmt="txt">Text</button>
+    </div>
+
+    <div class="sheet__opts" id="optSvg">
+      <label class="check"><input type="checkbox" id="chkOutline" checked><span>Convert letters to outlines</span></label>
+      <p class="hint">Outlines open identically everywhere — no font needed. Uncheck to keep live text with the font embedded.</p>
+    </div>
+
+    <div class="sheet__opts" id="optPng" hidden>
+      <div class="field">
+        <div class="field__head"><label for="scaleNum">Scale ×</label>
+          <input class="num" type="number" id="scaleNum" min="1" max="8" step="1" value="2"></div>
+        <input class="range" type="range" id="scaleRange" min="1" max="8" step="1" value="2" aria-label="PNG scale">
+      </div>
+      <p class="hint" id="pngDims">—</p>
+    </div>
+
+    <div class="sheet__opts" id="optTxt" hidden>
+      <p class="hint">A plain-text rendering of the grid — the format the reference layouts were typed in. Handy for pasting back into the tool.</p>
+    </div>
+
+    <div class="sheet__foot">
+      <button type="button" class="btn btn--ghost" id="btnCopy">Copy</button>
+      <span class="statusbar__grow"></span>
+      <button type="button" class="btn btn--utility" value="cancel" id="btnExportCancel">Cancel</button>
+      <button type="button" class="btn btn--primary" id="btnDownload">Download</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ────────────────────────────  HELP DIALOG  ──────────────────────────── -->
+<dialog class="sheet" id="dlgHelp" aria-labelledby="dlgHelpTitle">
+  <div class="sheet__inner">
+    <h2 class="sheet__title" id="dlgHelpTitle">Shortcuts</h2>
+    <dl class="keys">
+      <dt><kbd>Click</kbd></dt><dd>Place the cursor. Click the same cell again to flip direction.</dd>
+      <dt><kbd>Tab</kbd> <span>/</span> <kbd>Enter</kbd></dt><dd>Flip between across and down.</dd>
+      <dt><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></dt><dd>Move the cursor; sets the direction to match.</dd>
+      <dt><kbd>Space</kbd></dt><dd>Clear the cell and step forward.</dd>
+      <dt><kbd>⌫</kbd></dt><dd>Step back and clear.</dd>
+      <dt><kbd>Drag</kbd> <span>/</span> <kbd>⇧</kbd>+<kbd>Click</kbd></dt><dd>Select a block of cells.</dd>
+      <dt><kbd>⌫</kbd> <span>on a selection</span></dt><dd>Clear those cells.</dd>
+      <dt><kbd>⌘</kbd>+<kbd>V</kbd></dt><dd>Paste a word — or a whole multi-line layout.</dd>
+      <dt><kbd>⌘</kbd>+<kbd>Z</kbd></dt><dd>Undo. <kbd>⇧</kbd>+<kbd>⌘</kbd>+<kbd>Z</kbd> to redo.</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Drop the selection.</dd>
+    </dl>
+    <div class="sheet__foot">
+      <span class="statusbar__grow"></span>
+      <button type="button" class="btn btn--primary" id="btnHelpClose">Done</button>
+    </div>
+  </div>
+</dialog>
+
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

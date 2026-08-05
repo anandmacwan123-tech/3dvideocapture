@@ -1,0 +1,559 @@
+/* ============================================================
+   Crossword — layout tool
+   Chrome follows the Apple design language in DESIGN.md:
+   one accent (Action Blue), parchment + white surfaces,
+   hairline separation, pill CTAs, no decorative shadow.
+   The grid is the product; the UI gets out of its way.
+   ============================================================ */
+
+@font-face {
+  font-family: "Helvetica Now Display";
+  src: url("../fonts/HelveticaNowDisplay-Bold.woff2") format("woff2"),
+       url("../fonts/HelveticaNowDisplay-Bold.ttf")   format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  /* colour */
+  --primary: #0066cc;
+  --primary-focus: #0071e3;
+  --ink: #1d1d1f;
+  --ink-80: #333;
+  --ink-48: #7a7a7a;
+  --canvas: #fff;
+  --parchment: #f5f5f7;
+  --pearl: #fafafc;
+  --hairline: #e0e0e0;
+  --divider-soft: #f0f0f0;
+  --on-primary: #fff;
+
+  /* radius */
+  --r-sm: 8px;
+  --r-md: 11px;
+  --r-lg: 18px;
+  --r-pill: 9999px;
+
+  /* spacing */
+  --s-xxs: 4px;
+  --s-xs: 8px;
+  --s-sm: 12px;
+  --s-md: 17px;
+  --s-lg: 24px;
+  --s-xl: 32px;
+
+  --ui: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+
+  --topbar-h: 52px;
+  --panel-w: 288px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--ui);
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.374px;
+  color: var(--ink);
+  background: var(--parchment);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ─────────────────────────────  TOP BAR  ───────────────────────────── */
+
+.topbar {
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-md);
+  padding: 0 var(--s-md);
+  background: rgba(245, 245, 247, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--divider-soft);
+  position: relative;
+  z-index: 20;
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-sm);
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+
+/* the wordmark is itself a little crossword row */
+.wordmark {
+  display: inline-flex;
+  font-family: "Helvetica Now Display", var(--ui);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink);
+}
+.wordmark b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  font-weight: 700;
+}
+
+.topbar__sub {
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  color: var(--ink-48);
+  white-space: nowrap;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+  flex: none;
+}
+
+/* ─────────────────────────────  BUTTONS  ───────────────────────────── */
+
+.btn {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.29;
+  letter-spacing: -0.224px;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+}
+.btn:active { transform: scale(0.95); }
+.btn:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 2px; }
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-radius: var(--r-pill);
+  padding: 8px 18px;
+}
+
+.btn--utility {
+  background: transparent;
+  color: var(--primary);
+  border-radius: var(--r-pill);
+  padding: 8px 14px;
+}
+.btn--utility:hover { background: rgba(0, 102, 204, 0.08); }
+
+.btn--ghost {
+  background: var(--pearl);
+  color: var(--ink-80);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  padding: 8px 14px;
+}
+.btn--ghost:hover { background: #f2f2f5; }
+
+.btn--block { display: block; width: 100%; }
+
+/* ─────────────────────────────  SHELL  ───────────────────────────── */
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--panel-w) minmax(0, 1fr);
+  height: calc(100% - var(--topbar-h));
+}
+
+/* ─────────────────────────────  PANEL  ───────────────────────────── */
+
+.panel {
+  background: var(--parchment);
+  border-right: 1px solid var(--divider-soft);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: var(--s-xl);
+}
+
+.group {
+  padding: var(--s-md);
+  border-bottom: 1px solid var(--divider-soft);
+}
+.group--last { border-bottom: 0; }
+
+.group__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 var(--s-sm);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-48);
+}
+
+/* slider + number pair */
+
+.field { margin-bottom: var(--s-sm); }
+.field:last-of-type { margin-bottom: 0; }
+
+.field__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-xs);
+  margin-bottom: 2px;
+}
+
+.field__head label {
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  color: var(--ink-80);
+}
+
+.num {
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  color: var(--ink);
+  width: 62px;
+  padding: 4px 8px;
+  text-align: right;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  -moz-appearance: textfield;
+}
+.num::-webkit-outer-spin-button,
+.num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.num:focus { outline: 2px solid var(--primary-focus); outline-offset: -1px; border-color: transparent; }
+
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(var(--primary), var(--primary)) 0 / var(--fill, 0%) 100% no-repeat, #d8d8dd;
+}
+.range::-moz-range-track { height: 4px; border-radius: var(--r-pill); background: #d8d8dd; }
+.range::-moz-range-progress { height: 4px; border-radius: var(--r-pill); background: var(--primary); }
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.range::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.range:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 4px; border-radius: var(--r-pill); }
+
+/* link toggle */
+
+.lockbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--ink-48);
+  cursor: pointer;
+}
+.lockbtn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
+.lockbtn.is-on { color: var(--primary); background: rgba(0, 102, 204, 0.1); }
+.lockbtn:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 1px; }
+
+/* checkbox row */
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+  margin-top: var(--s-sm);
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  color: var(--ink-80);
+  cursor: pointer;
+}
+.check input { accent-color: var(--primary); width: 15px; height: 15px; margin: 0; }
+
+.hint {
+  margin: var(--s-xs) 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: -0.12px;
+  color: var(--ink-48);
+}
+
+.row { display: flex; gap: var(--s-xs); margin-top: var(--s-sm); }
+
+.colorfield {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+  padding: 5px 8px;
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  letter-spacing: -0.12px;
+  color: var(--ink-48);
+  cursor: pointer;
+  min-width: 0;
+}
+.colorfield input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px; height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: none;
+}
+.colorfield input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.colorfield input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 4px; }
+.colorfield input[type="color"]::-moz-color-swatch { border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 4px; }
+.colorfield span { overflow: hidden; text-overflow: ellipsis; }
+
+/* swatches */
+
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch {
+  width: 26px; height: 26px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.12s ease;
+}
+.swatch:active { transform: scale(0.9); }
+.swatch.is-on { box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--primary-focus); }
+.swatch:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 3px; }
+
+/* ─────────────────────────────  STAGE  ───────────────────────────── */
+
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--canvas);
+}
+
+.stage__scroll {
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  /* `safe` keeps the top-left reachable once the board outgrows the viewport;
+     plain centring would push it under the scroll origin */
+  align-items: safe center;
+  justify-content: safe center;
+  padding: var(--s-lg);
+}
+
+.stage__holder {
+  position: relative;
+  line-height: 0;
+  /* the paper edge — the only elevation in the tool, and it sits under
+     the artwork rather than under any UI chrome */
+  box-shadow: rgba(0, 0, 0, 0.12) 0 2px 18px;
+}
+
+#board {
+  display: block;
+  touch-action: none;
+  cursor: cell;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* checkerboard behind a transparent ground */
+.stage__holder.is-transparent {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #ececf0 25%, transparent 25%, transparent 75%, #ececf0 75%),
+    linear-gradient(45deg, #ececf0 25%, transparent 25%, transparent 75%, #ececf0 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+
+/* off-screen field that owns the caret so soft keyboards appear */
+.keyproxy {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 1px; height: 1px;
+  padding: 0; border: 0;
+  opacity: 0;
+  pointer-events: none;
+  font-size: 16px; /* stops iOS zooming on focus */
+}
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  height: 32px;
+  padding: 0 var(--s-md);
+  border-top: 1px solid var(--divider-soft);
+  background: var(--pearl);
+  font-size: 12px;
+  letter-spacing: -0.12px;
+  color: var(--ink-48);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.statusbar__sep { width: 1px; height: 12px; background: var(--hairline); }
+.statusbar__grow { flex: 1; }
+.statusbar__muted { color: var(--ink-48); transition: opacity 0.4s ease; }
+
+/* ─────────────────────────────  DIALOGS  ───────────────────────────── */
+
+.sheet {
+  width: min(420px, calc(100vw - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--canvas);
+  color: var(--ink);
+  box-shadow: rgba(0, 0, 0, 0.22) 0 5px 40px;
+}
+.sheet::backdrop { background: rgba(0, 0, 0, 0.28); backdrop-filter: blur(3px); }
+
+.sheet__inner { padding: var(--s-lg); }
+
+.sheet__title {
+  margin: 0 0 var(--s-md);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.231px;
+}
+
+.sheet__opts { margin-top: var(--s-md); }
+
+.sheet__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+  margin-top: var(--s-lg);
+}
+
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--parchment);
+  border-radius: var(--r-md);
+}
+.seg__btn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-80);
+  cursor: pointer;
+}
+.seg__btn.is-on { background: var(--canvas); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+.seg__btn:focus-visible { outline: 2px solid var(--primary-focus); outline-offset: 1px; }
+
+.keys {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px var(--s-md);
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: -0.224px;
+}
+.keys dt { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.keys dt span { color: var(--ink-48); font-size: 12px; }
+.keys dd { margin: 0; color: var(--ink-80); }
+
+kbd {
+  display: inline-block;
+  font-family: var(--ui);
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+  color: var(--ink);
+  background: var(--parchment);
+  border: 1px solid var(--hairline);
+  border-radius: 5px;
+}
+
+/* ─────────────────────────────  RESPONSIVE  ───────────────────────────── */
+
+@media (max-width: 833px) {
+  :root { --panel-w: 260px; }
+}
+
+@media (max-width: 734px) {
+  body { overflow: auto; }
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(280px, 55vh) auto;
+    height: auto;
+  }
+  .stage { order: -1; }
+  .panel {
+    border-right: 0;
+    border-top: 1px solid var(--divider-soft);
+  }
+  .topbar__sub { display: none; }
+  .stage__scroll { padding: var(--s-sm); }
+}
+
+@media (max-width: 560px) {
+  /* the shortcut sheet is about a hardware keyboard — of no use here */
+  #btnHelp { display: none; }
+  .wordmark b { width: 12px; }
+  .btn--utility { padding: 8px 10px; }
+}
+
+@media (max-width: 400px) {
+  .wordmark { font-size: 13px; }
+  .wordmark b { width: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
