@@ -28,15 +28,7 @@ export const LIMITS = {
   zoom:      { min: 10,  max: 400 },
 };
 
-export const PALETTE = [
-  "#1d1d1f", // ink
-  "#0066cc", // action blue
-  "#e8420a", // vermilion
-  "#4caf3f", // grass
-  "#7b52d9", // violet
-  "#f5b301", // amber
-];
-
+/* Ink and ground are the theme's, not the document's — see theme.js. */
 export const DEFAULTS = {
   cols: 24,
   rows: 16,
@@ -46,14 +38,12 @@ export const DEFAULTS = {
   fontSize: 22,
   baseline: 0,
   upper: true,
-  ink: PALETTE[0],
-  bg: "#ffffff",
   transparent: false,
   pad: 48,
   zoom: 100,
   guides: true,
   numbers: false,
-  cells: {},
+  cells: {},   // "row:col" -> a single character
 };
 
 export const key = (r, c) => `${r}:${c}`;
@@ -138,11 +128,11 @@ export function inBounds(r, c) {
  */
 export const getCell = (r, c) => (inBounds(r, c) ? state.cells[key(r, c)] : undefined);
 
-export function setCell(r, c, ch, color) {
+export function setCell(r, c, ch) {
   if (!inBounds(r, c)) return;
   const k = key(r, c);
   if (ch == null || ch === "" || ch === " ") delete state.cells[k];
-  else state.cells[k] = { ch, color: color || state.ink };
+  else state.cells[k] = ch;
 }
 
 export function clearCell(r, c) {
@@ -281,8 +271,10 @@ export function hydrate(data) {
   if (!next.cells || typeof next.cells !== "object") next.cells = {};
   const cells = {};
   for (const [k, v] of Object.entries(next.cells)) {
-    if (!/^\d+:\d+$/.test(k) || !v || typeof v.ch !== "string" || !v.ch) continue;
-    cells[k] = { ch: v.ch.slice(0, 1), color: typeof v.color === "string" ? v.color : DEFAULTS.ink };
+    if (!/^\d+:\d+$/.test(k)) continue;
+    // files written before letters went monochrome hold { ch, color }
+    const ch = typeof v === "string" ? v : v?.ch;
+    if (typeof ch === "string" && ch) cells[k] = ch.slice(0, 1);
   }
   next.cells = cells;
 

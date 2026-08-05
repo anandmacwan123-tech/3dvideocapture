@@ -94,7 +94,7 @@ export function attachInput({ board, proxy, draw }) {
       ui.selection = null;
     }
     commit();
-    setCell(ui.cursor.r, ui.cursor.c, ch, state.ink);
+    setCell(ui.cursor.r, ui.cursor.c, ch);
     step(1);
     draw();
   }
@@ -221,7 +221,7 @@ export function attachInput({ board, proxy, draw }) {
     const lines = [];
     for (let r = s.r0; r <= s.r1; r++) {
       let line = "";
-      for (let c = s.c0; c <= s.c1; c++) line += getCell(r, c)?.ch ?? " ";
+      for (let c = s.c0; c <= s.c1; c++) line += getCell(r, c) ?? " ";
       lines.push(line.replace(/\s+$/, ""));
     }
     return lines.join("\n");
@@ -253,7 +253,7 @@ export function attachInput({ board, proxy, draw }) {
       // a single word runs along the current direction
       for (const ch of lines[0]) {
         if (ch === " ") { step(1); continue; }
-        setCell(ui.cursor.r, ui.cursor.c, state.upper ? ch.toUpperCase() : ch, state.ink);
+        setCell(ui.cursor.r, ui.cursor.c, state.upper ? ch.toUpperCase() : ch);
         step(1);
       }
       draw();
@@ -272,7 +272,7 @@ export function attachInput({ board, proxy, draw }) {
         if (ch === " ") return;
         const r = r0 + i;
         const c = c0 + j;
-        if (inBounds(r, c)) setCell(r, c, state.upper ? ch.toUpperCase() : ch, state.ink);
+        if (inBounds(r, c)) setCell(r, c, state.upper ? ch.toUpperCase() : ch);
       });
     });
     draw();

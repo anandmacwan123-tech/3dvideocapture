@@ -3,9 +3,10 @@
    ============================================================ */
 
 import {
-  state, ui, LIMITS, DEFAULTS,
+  state, ui, LIMITS,
   subscribe, emit, loadFromStorage, serialise, hydrate, clampCursor,
 } from "./state.js";
+import { initTheme } from "./theme.js";
 import { render, geometry } from "./render.js";
 import { attachInput } from "./input.js";
 import { attachControls } from "./controls.js";
@@ -65,6 +66,9 @@ function fit() {
 
 /* ── boot ──────────────────────────────────────────────────── */
 
+/* resolves the board's ink and ground, so it has to run before the first draw */
+initTheme(() => draw());
+
 const restored = loadFromStorage();
 if (!restored) seed();
 
@@ -107,8 +111,7 @@ window.addEventListener("resize", () => draw());
 /* ── a starting layout, so the tool opens with something in it ── */
 
 function seed() {
-  /* every crossing below shares a real letter — GRID is laid last so it
-     carries its colour through the squares it shares */
+  /* every crossing below shares a real letter */
   const OFFSET_R = 4;
   const OFFSET_C = 7;
   const words = [
@@ -119,16 +122,14 @@ function seed() {
     { word: "PAGE",      r: 2, c: 0, dir: "across" },
     { word: "UNIT",      r: 4, c: 0, dir: "across" },
     { word: "EDGE",      r: 6, c: 0, dir: "across" },
-    { word: "GRID",      r: 2, c: 2, dir: "down", colour: "#0066cc" },
+    { word: "GRID",      r: 2, c: 2, dir: "down"   },
   ];
 
-  for (const { word, r, c, dir, colour } of words) {
+  for (const { word, r, c, dir } of words) {
     [...word].forEach((ch, i) => {
       const rr = OFFSET_R + (dir === "down" ? r + i : r);
       const cc = OFFSET_C + (dir === "across" ? c + i : c);
-      if (rr < state.rows && cc < state.cols) {
-        state.cells[`${rr}:${cc}`] = { ch, color: colour ?? DEFAULTS.ink };
-      }
+      if (rr < state.rows && cc < state.cols) state.cells[`${rr}:${cc}`] = ch;
     });
   }
   ui.cursor = { r: OFFSET_R, c: OFFSET_C };

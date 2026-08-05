@@ -1,12 +1,14 @@
-# Crossword — layout tool
+# Layout
 
-A grid-based type tool for building crossword-style lettering. Letters sit
-one to a cell, optically centred in an invisible block, so words interlock the
-way they do in a printed crossword.
+A grid tool for crossword-style lettering. Letters sit one to a cell,
+optically centred in an invisible block, so words interlock the way they do in
+a printed crossword.
 
-Static site — no build step, no dependencies, no framework.
+Monochrome, light or dark. Static site — no build step, no dependencies, no
+framework.
 
-![The tool](docs/screenshot.png)
+![Light](docs/screenshot.png)
+![Dark](docs/screenshot-dark.png)
 
 ## The typography
 
@@ -29,14 +31,22 @@ sit a touch high or low.
 
 | Panel | What it does |
 | --- | --- |
-| **Grid** | Columns and rows. Shrinking hides letters rather than deleting them — pull the slider back out and they return. *Trim to content* crops the grid to the letters and discards anything left outside. |
-| **Cell** | Cell width and height, linked by default. Unlink for the wide-set look of the reference layouts, where horizontal spacing exceeds the line spacing. |
-| **Type** | Font size, baseline shift, force uppercase. |
-| **Colour** | Letter colour and ground. Picking a colour recolours the current selection; with nothing selected it sets the colour for what you type next. |
-| **Canvas** | Margin around the grid, zoom, guide visibility, crossword clue numbers. |
+| **Grid** | Columns and rows. Shrinking hides letters rather than deleting them — pull the slider back out and they return. *Trim* crops the grid to the letters and discards anything left outside. |
+| **Cell** | Width and height, linked by default. Unlink for the wide-set look of the reference layouts, where horizontal spacing exceeds the line spacing. |
+| **Type** | Size, baseline shift, uppercase. |
+| **Canvas** | Margin, zoom, grid guides, crossword clue numbers, transparent ground. |
 
 Every numeric control is a slider *and* a number field bound to the same value
 — scrub for feel, type for an exact figure.
+
+## Light and dark
+
+The toggle sits top-left. It follows the system until you state a preference,
+then remembers it.
+
+Ink and ground belong to the theme, not to the document, and there is no colour
+anywhere — so a layout is the same layout in either mode, and what you export
+is what you see. Exporting from dark gives you white letters on black.
 
 ## Typing
 
@@ -65,7 +75,7 @@ The Text export writes that same format back out.
 - **PNG** — 1× to 8×, drawn straight onto a canvas so the raster matches the screen.
 - **Text** — one character per cell.
 
-Ground colour is honoured, or omitted entirely with *Transparent ground*.
+*Transparent* drops the ground and exports the letters alone.
 
 Work is kept in `localStorage` as you go. **Save** and **Open** move a layout
 between machines as JSON.
@@ -137,6 +147,7 @@ public/                 everything that gets deployed
   index.html            markup and the control panel
   css/app.css           design tokens and chrome
   js/state.js           the document, undo history, persistence
+  js/theme.js           light / dark, and the board's ink and ground
   js/render.js          SVG drawing and grid geometry
   js/input.js           pointer, keyboard, clipboard
   js/controls.js        sidebar bindings
@@ -149,7 +160,14 @@ wrangler.toml           declares public/ as the assets directory
 ```
 
 The document is deliberately small: grid dimensions plus a sparse map of
-`"row:col" → { ch, color }`. Everything else is presentation.
+`"row:col" → character`. Everything else is presentation. Files written before
+the letters went monochrome held `{ ch, color }` per cell; those still open,
+and the colour is dropped.
+
+The board is SVG, which cannot read CSS variables through attributes, so
+`theme.js` pulls the theme's ink and ground out of the stylesheet on each
+change and hands them to the renderer and the exporters. Colour lives in one
+place — the CSS — for chrome and canvas alike.
 
 `public/fonts/glyphs.json` holds SVG path data and advance widths for 125
 glyphs (printable ASCII plus common typographic marks). It is only fetched when

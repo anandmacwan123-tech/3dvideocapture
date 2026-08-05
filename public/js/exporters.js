@@ -9,7 +9,8 @@
    ============================================================ */
 
 import { state, FONT_FAMILY, CAP_RATIO, UPM } from "./state.js";
-import { geometry, baselineFor, lettersMarkup, esc } from "./render.js";
+import { geometry, baselineFor, lettersMarkup } from "./render.js";
+import { paint } from "./theme.js";
 
 let glyphCache = null;
 let fontDataCache = null;
@@ -49,7 +50,7 @@ function header(st) {
     open:
       `<svg xmlns="http://www.w3.org/2000/svg" width="${g.w}" height="${g.h}" ` +
       `viewBox="0 0 ${g.w} ${g.h}">`,
-    ground: st.transparent ? "" : `<rect width="${g.w}" height="${g.h}" fill="${esc(st.bg)}"/>`,
+    ground: st.transparent ? "" : `<rect width="${g.w}" height="${g.h}" fill="${paint.ground}"/>`,
   };
 }
 
@@ -59,15 +60,13 @@ async function outlinedLetters(st) {
   const s = st.fontSize / upm;
   const g = geometry(st);
 
-  /* group runs of the same colour so the file stays tidy in a
-     layers panel rather than exploding into one node per letter */
-  const byColour = new Map();
+  const nodes = [];
 
-  for (const [k, cell] of Object.entries(st.cells)) {
+  for (const [k, ch] of Object.entries(st.cells)) {
     const [r, c] = k.split(":").map(Number);
     if (r >= st.rows || c >= st.cols) continue;
 
-    const glyph = data.glyphs[cell.ch] || data.glyphs[cell.ch.toUpperCase()];
+    const glyph = data.glyphs[ch] || data.glyphs[ch.toUpperCase()];
     if (!glyph || !glyph.d) continue;
 
     const cx = g.x0 + c * st.cellW + st.cellW / 2;
@@ -75,20 +74,13 @@ async function outlinedLetters(st) {
     const base = baselineFor(st, r);
 
     /* font units are y-up, SVG is y-down, hence the negative y scale */
-    const node =
+    nodes.push(
       `<path transform="translate(${round(left)} ${round(base)}) scale(${s.toFixed(6)} ${(-s).toFixed(6)})" ` +
-      `d="${glyph.d}"/>`;
-
-    const colour = cell.color;
-    if (!byColour.has(colour)) byColour.set(colour, []);
-    byColour.get(colour).push(node);
+      `d="${glyph.d}"/>`
+    );
   }
 
-  let out = "";
-  for (const [colour, nodes] of byColour) {
-    out += `<g fill="${esc(colour)}">${nodes.join("")}</g>`;
-  }
-  return out;
+  return `<g fill="${paint.ink}">${nodes.join("")}</g>`;
 }
 
 export async function toSVG({ outline = true } = {}) {
@@ -107,7 +99,7 @@ export async function toSVG({ outline = true } = {}) {
   return (
     `${open}${face}${ground}` +
     `<g font-family="${FONT_FAMILY}, Helvetica, Arial, sans-serif" font-weight="700" ` +
-    `font-size="${st.fontSize}" text-anchor="middle">${lettersMarkup(st)}</g></svg>`
+    `font-size="${st.fontSize}" text-anchor="middle" fill="${paint.ink}">${lettersMarkup(st)}</g></svg>`
   );
 }
 
@@ -133,19 +125,19 @@ export async function toPNGBlob(scale = 2) {
   ctx.scale(scale, scale);
 
   if (!st.transparent) {
-    ctx.fillStyle = st.bg;
+    ctx.fillStyle = paint.ground;
     ctx.fillRect(0, 0, g.w, g.h);
   }
 
   ctx.font = `700 ${st.fontSize}px "${FONT_FAMILY}", Helvetica, Arial, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = paint.ink;
 
-  for (const [k, cell] of Object.entries(st.cells)) {
+  for (const [k, ch] of Object.entries(st.cells)) {
     const [r, c] = k.split(":").map(Number);
     if (r >= st.rows || c >= st.cols) continue;
-    ctx.fillStyle = cell.color;
-    ctx.fillText(cell.ch, g.x0 + c * st.cellW + st.cellW / 2, baselineFor(st, r));
+    ctx.fillText(ch, g.x0 + c * st.cellW + st.cellW / 2, baselineFor(st, r));
   }
 
   return new Promise((resolve, reject) => {
@@ -165,7 +157,7 @@ export function toText() {
   const lines = [];
   for (let r = 0; r < st.rows; r++) {
     let line = "";
-    for (let c = 0; c < st.cols; c++) line += st.cells[`${r}:${c}`]?.ch ?? " ";
+    for (let c = 0; c < st.cols; c++) line += st.cells[`${r}:${c}`] ?? " ";
     lines.push(line.replace(/\s+$/, ""));
   }
   while (lines.length && lines.at(-1) === "") lines.pop();

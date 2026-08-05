@@ -5,7 +5,7 @@
    same value, so you can scrub for feel or type an exact figure.
    ============================================================ */
 
-import { state, ui, LIMITS, PALETTE, commit, selectedCells, pruneCells, clampCursor, contentBounds, translateCells } from "./state.js";
+import { state, ui, LIMITS, commit, pruneCells, clampCursor, contentBounds, translateCells } from "./state.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -134,54 +134,8 @@ export function attachControls({ draw, fit, onExport, onSave, onLoad, onHelp }) 
     state.upper = chkUpper.checked;
     if (state.upper) {
       commit();
-      for (const cell of Object.values(state.cells)) cell.ch = cell.ch.toUpperCase();
+      for (const [k, ch] of Object.entries(state.cells)) state.cells[k] = ch.toUpperCase();
     }
-    draw();
-  });
-
-  /* ── colour ───────────────────────────────────────────── */
-
-  const swatchWrap = $("swatches");
-  const inkCustom = $("inkCustom");
-  const bgColor = $("bgColor");
-  const chkTransparent = $("chkTransparent");
-
-  function applyInk(colour) {
-    state.ink = colour;
-    if (ui.selection) {
-      commit();
-      for (const [r, c] of selectedCells()) {
-        const cell = state.cells[`${r}:${c}`];
-        if (cell) cell.color = colour;
-      }
-    }
-    paintSwatches();
-    draw();
-  }
-
-  PALETTE.forEach((colour) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "swatch";
-    b.style.background = colour;
-    b.dataset.colour = colour;
-    b.title = colour;
-    b.setAttribute("aria-label", `Letter colour ${colour}`);
-    b.addEventListener("click", () => { inkCustom.value = colour; applyInk(colour); });
-    swatchWrap.appendChild(b);
-  });
-
-  function paintSwatches() {
-    for (const b of swatchWrap.children) {
-      b.classList.toggle("is-on", b.dataset.colour.toLowerCase() === state.ink.toLowerCase());
-    }
-  }
-
-  inkCustom.addEventListener("input", () => applyInk(inkCustom.value));
-  bgColor.addEventListener("input", () => { state.bg = bgColor.value; draw(); });
-
-  chkTransparent.addEventListener("change", () => {
-    state.transparent = chkTransparent.checked;
     draw();
   });
 
@@ -189,6 +143,12 @@ export function attachControls({ draw, fit, onExport, onSave, onLoad, onHelp }) 
 
   syncers.push(bindPair("pad", plain("pad")).sync);
   syncers.push(bindPair("zoom", plain("zoom")).sync);
+
+  const chkTransparent = $("chkTransparent");
+  chkTransparent.addEventListener("change", () => {
+    state.transparent = chkTransparent.checked;
+    draw();
+  });
 
   $("btnFit").addEventListener("click", fit);
 
@@ -236,9 +196,6 @@ export function attachControls({ draw, fit, onExport, onSave, onLoad, onHelp }) 
     chkGuides.checked = state.guides;
     chkNumbers.checked = state.numbers;
     chkTransparent.checked = state.transparent;
-    inkCustom.value = state.ink;
-    bgColor.value = state.bg;
-    paintSwatches();
   }
 
   syncAll();

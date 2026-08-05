@@ -7,6 +7,7 @@
    ============================================================ */
 
 import { state, ui, FONT_FAMILY, CAP_RATIO, currentWord, clueNumbers } from "./state.js";
+import { paint } from "./theme.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -71,17 +72,18 @@ function guidesPath(st) {
 /**
  * The letters — the only layer that survives into an export.
  * Rounded to 2dp so the markup stays readable and small.
+ * Colour is set once on the parent group, not per letter.
  */
 export function lettersMarkup(st) {
   const g = geometry(st);
   const n = (v) => Math.round(v * 100) / 100;
   let out = "";
-  for (const [k, cell] of Object.entries(st.cells)) {
+  for (const [k, ch] of Object.entries(st.cells)) {
     const [r, c] = k.split(":").map(Number);
     if (r >= st.rows || c >= st.cols) continue;
     const x = n(g.x0 + c * st.cellW + st.cellW / 2);
     const y = n(baselineFor(st, r));
-    out += `<text x="${x}" y="${y}" fill="${esc(cell.color)}">${esc(cell.ch)}</text>`;
+    out += `<text x="${x}" y="${y}">${esc(ch)}</text>`;
   }
   return out;
 }
@@ -95,7 +97,7 @@ function numbersMarkup(st) {
     const x = g.x0 + c * st.cellW + st.cellW * 0.08;
     const y = g.y0 + r * st.cellH + size + st.cellH * 0.04;
     out += `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${size.toFixed(2)}" ` +
-           `font-family="system-ui, sans-serif" font-weight="400" fill="#9a9aa0" text-anchor="start">${num}</text>`;
+           `font-family="system-ui, sans-serif" font-weight="400" fill="${paint.number}" text-anchor="start">${num}</text>`;
   }
   return out;
 }
@@ -120,10 +122,10 @@ export function render(board) {
   board.setAttribute("width", Math.max(1, Math.round(g.w * scale)));
   board.setAttribute("height", Math.max(1, Math.round(g.h * scale)));
 
-  const ground = st.transparent ? "" : `<rect width="${g.w}" height="${g.h}" fill="${esc(st.bg)}"/>`;
+  const ground = st.transparent ? "" : `<rect width="${g.w}" height="${g.h}" fill="${paint.ground}"/>`;
 
   const guides = st.guides
-    ? `<path d="${guidesPath(st)}" stroke="#dcdce2" stroke-width="1" fill="none" vector-effect="non-scaling-stroke"/>`
+    ? `<path d="${guidesPath(st)}" stroke="${paint.guide}" stroke-width="1" fill="none" vector-effect="non-scaling-stroke"/>`
     : "";
 
   /* current word first, then the cursor cell on top of it */
@@ -131,22 +133,22 @@ export function render(board) {
   if (!ui.selection) {
     const w = currentWord();
     if (w.r0 !== w.r1 || w.c0 !== w.c1) {
-      cursorLayer += rect(w.r0, w.c0, w.r1, w.c1, st, 'fill="rgba(0,102,204,0.07)"');
+      cursorLayer += rect(w.r0, w.c0, w.r1, w.c1, st, `fill="${paint.word}"`);
     }
     cursorLayer += rect(ui.cursor.r, ui.cursor.c, ui.cursor.r, ui.cursor.c, st,
-      'fill="rgba(0,102,204,0.16)"');
+      `fill="${paint.cursor}"`);
 
     /* a thin bar on the leading edge shows which way typing will run */
     const cx = g.x0 + ui.cursor.c * st.cellW;
     const cy = g.y0 + ui.cursor.r * st.cellH;
     cursorLayer += ui.dir === "across"
-      ? `<rect x="${cx + st.cellW - 2}" y="${cy}" width="2" height="${st.cellH}" fill="#0066cc"/>`
-      : `<rect x="${cx}" y="${cy + st.cellH - 2}" width="${st.cellW}" height="2" fill="#0066cc"/>`;
+      ? `<rect x="${cx + st.cellW - 2}" y="${cy}" width="2" height="${st.cellH}" fill="${paint.caret}"/>`
+      : `<rect x="${cx}" y="${cy + st.cellH - 2}" width="${st.cellW}" height="2" fill="${paint.caret}"/>`;
   }
 
   const selectionLayer = ui.selection
     ? rect(ui.selection.r0, ui.selection.c0, ui.selection.r1, ui.selection.c1, st,
-        'fill="rgba(0,102,204,0.10)" stroke="#0066cc" stroke-width="1" vector-effect="non-scaling-stroke"')
+        `fill="${paint.word}" stroke="${paint.caret}" stroke-width="1" vector-effect="non-scaling-stroke"`)
     : "";
 
   board.innerHTML =
@@ -156,7 +158,7 @@ export function render(board) {
     selectionLayer +
     (st.numbers ? numbersMarkup(st) : "") +
     `<g font-family="${FONT_FAMILY}, Helvetica, Arial, sans-serif" font-weight="700" ` +
-    `font-size="${st.fontSize}" text-anchor="middle">${lettersMarkup(st)}</g>`;
+    `font-size="${st.fontSize}" text-anchor="middle" fill="${paint.ink}">${lettersMarkup(st)}</g>`;
 }
 
 export { esc, SVG_NS };
