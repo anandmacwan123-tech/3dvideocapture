@@ -78,42 +78,57 @@ npm run dev      # http://localhost:8080
 
 Any static server will do — there is nothing to compile.
 
-## Deploying to Cloudflare Pages
+## Deploying to Cloudflare
 
-Everything that gets served lives in `public/`. Nothing else in the repo is
-uploaded — which is the point: a build machine that runs `npm install` drops a
-`node_modules` at the repo root, and wrangler's own `workerd` binary inside it
-is 122 MiB, well past the 25 MiB per-asset ceiling.
-
-`wrangler.toml` declares the directory, so both routes agree:
+This deploys as a **static-assets Worker** — no Worker script, just files.
+`wrangler.toml` is what makes that work:
 
 ```toml
-name = "crossword"
-pages_build_output_dir = "public"
+name = "artresidencymoident"
+compatibility_date = "2026-08-05"
+
+[assets]
+directory = "./public"
 ```
 
-**From the dashboard** — Workers & Pages → Create → Pages → connect this repo:
+Everything served lives in `public/`, and nothing else in the repo is uploaded.
+That is the point: a build machine that runs an install step drops a
+`node_modules` at the repo root, and wrangler's own `workerd` binary inside it
+is 122 MiB — well past the 25 MiB per-asset ceiling.
+
+**Workers Builds** (the Git integration) needs no changes from its defaults:
 
 | Setting | Value |
 | --- | --- |
-| Framework preset | None |
 | Build command | *(leave empty)* |
-| Build output directory | `public` |
+| Deploy command | `npx wrangler deploy` |
 
-Leave the build command **empty**. There is nothing to compile, and putting a
-deploy command there makes the build install wrangler and then deploy from
-inside itself — which is how `node_modules` ends up in the upload.
+There is nothing to compile, so the build command stays empty. The deploy
+command is wrangler's default and reads the assets directory from the config.
 
-**From the CLI**, on your own machine, as an alternative to the Git integration:
+**From your own machine**, as an alternative to the Git integration:
 
 ```bash
-npm run deploy   # wrangler pages deploy — reads the directory from wrangler.toml
+npm run deploy   # npx wrangler deploy
 ```
 
-Use one route or the other, not both.
+### If this is a Pages project instead
+
+Pages and Workers take different config keys and wrangler infers the project
+type from whichever it finds — they cannot both be present. For Pages, swap the
+`[assets]` block for:
+
+```toml
+pages_build_output_dir = "public"
+```
+
+and deploy with `wrangler pages deploy`. Pages has no deploy-command field; it
+uploads the build output directory itself, so leave its build command empty
+too.
 
 `public/_headers` sets the cache policy — a year on the font, an hour on CSS
-and JS — plus `nosniff`, `SAMEORIGIN` and a referrer policy.
+and JS — plus `nosniff`, `SAMEORIGIN` and a referrer policy. Both products
+honour it.
 
 ## Layout of the source
 
@@ -130,7 +145,7 @@ public/                 everything that gets deployed
   _headers              cache and security headers
 font-src/               the TTF the WOFF2 and outlines are built from
 tools/extract-glyphs.py rebuilds both from that TTF
-wrangler.toml           declares public/ as the deploy directory
+wrangler.toml           declares public/ as the assets directory
 ```
 
 The document is deliberately small: grid dimensions plus a sparse map of

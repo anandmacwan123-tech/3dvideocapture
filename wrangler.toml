@@ -1,14 +1,22 @@
-# Cloudflare Pages configuration.
+# Cloudflare Workers configuration — a static-assets Worker.
 #
-# Only `public/` is uploaded, so anything a build machine writes at the repo
-# root — node_modules, caches — can never be mistaken for a site asset.
+# This project builds through Workers Builds, whose deploy command is
+# `npx wrangler deploy`. That is the Workers command, so the config has to be
+# a Workers config: `[assets]` below, not `pages_build_output_dir`. The two are
+# mutually exclusive — wrangler picks the project type from whichever it finds,
+# and the Pages key made `wrangler deploy` refuse to run.
 #
-# TOML rejects a duplicate key, and a file that fails to parse is ignored
-# wholesale: wrangler then reports `pages_build_output_dir` as missing even
-# though it is written below. So there is exactly one `name` and exactly one
-# `pages_build_output_dir` here — edit these lines in place, never append.
+# There is no Worker script, so no `main`. Only `public/` is uploaded, which
+# keeps anything a build machine writes at the repo root — node_modules,
+# caches — out of the deployment.
 #
-# `name` must match the Cloudflare Pages project this deploys to.
+# TOML rejects a duplicate key and a file that fails to parse is ignored
+# wholesale, so edit these values in place rather than appending new ones.
+#
+# `name` must match the Cloudflare project this deploys to.
 
 name = "artresidencymoident"
-pages_build_output_dir = "public"
+compatibility_date = "2026-08-05"
+
+[assets]
+directory = "./public"

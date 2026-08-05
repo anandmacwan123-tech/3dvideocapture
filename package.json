@@ -6,6 +6,6 @@
   "type": "module",
   "scripts": {
     "dev": "npx --yes serve@14 public -l 8080",
-    "deploy": "npx --yes wrangler@latest pages deploy"
+    "deploy": "npx --yes wrangler@latest deploy"
   }
 }
