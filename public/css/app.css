@@ -8,8 +8,7 @@
 
 @font-face {
   font-family: "Helvetica Now Display";
-  src: url("../fonts/HelveticaNowDisplay-Bold.woff2") format("woff2"),
-       url("../fonts/HelveticaNowDisplay-Bold.ttf")   format("truetype");
+  src: url("../fonts/HelveticaNowDisplay-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: block;

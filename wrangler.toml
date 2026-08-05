@@ -1,0 +1,13 @@
+# Cloudflare Pages configuration.
+#
+# Keeping this in the repo means the deployable directory is declared in one
+# place, rather than living in dashboard state. Only `public/` is uploaded, so
+# anything the build machine installs at the repo root — node_modules, caches —
+# can never be mistaken for a site asset.
+#
+# Leave the dashboard's *build command* empty: there is nothing to compile, and
+# running a deploy from inside the build is what pulled wrangler's 122 MiB
+# workerd binary into the upload.
+
+name = "crossword"
+pages_build_output_dir = "public"

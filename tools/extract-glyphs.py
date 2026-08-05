@@ -19,9 +19,11 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "fonts" / "HelveticaNowDisplay-Bold.ttf"
-WOFF2 = ROOT / "fonts" / "HelveticaNowDisplay-Bold.woff2"
-TARGET = ROOT / "fonts" / "glyphs.json"
+# The TTF stays out of public/ — it is a source asset, not something to serve.
+SOURCE = ROOT / "font-src" / "HelveticaNowDisplay-Bold.ttf"
+FONTS = ROOT / "public" / "fonts"
+WOFF2 = FONTS / "HelveticaNowDisplay-Bold.woff2"
+TARGET = FONTS / "glyphs.json"
 
 # printable ASCII, plus the punctuation a layout is likely to reach for
 CHARS = [chr(c) for c in range(0x20, 0x7F)] + list(
