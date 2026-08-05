@@ -2,10 +2,14 @@
    Monochrome. Two themes, one accent — the ink itself.
    ============================================================ */
 
+/* The display face is loaded under a neutral alias and at any weight, so
+   swapping the typeface is a matter of rebuilding fonts/display.woff2 —
+   see tools/extract-glyphs.py. The real family name lives in state.js,
+   where exports pick it up. */
 @font-face {
-  font-family: "Helvetica Now Display";
-  src: url("../fonts/HelveticaNowDisplay-Bold.woff2") format("woff2");
-  font-weight: 700;
+  font-family: "Display";
+  src: url("../fonts/display.woff2") format("woff2");
+  font-weight: 1 1000;
   font-style: normal;
   font-display: block;
 }

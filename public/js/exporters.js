@@ -8,7 +8,7 @@
    which keeps the letters editable.
    ============================================================ */
 
-import { state, FONT_FAMILY, CAP_RATIO, UPM } from "./state.js";
+import { state, FONT_FAMILY, FONT_STACK, EXPORT_STACK, FONT_WEIGHT, CAP_RATIO, UPM } from "./state.js";
 import { geometry, baselineFor, lettersMarkup } from "./render.js";
 import { paint } from "./theme.js";
 
@@ -26,7 +26,7 @@ async function glyphs() {
 
 async function fontDataUri() {
   if (!fontDataCache) {
-    const res = await fetch("fonts/HelveticaNowDisplay-Bold.woff2");
+    const res = await fetch("fonts/display.woff2");
     if (!res.ok) throw new Error("Could not load the font.");
     const buf = new Uint8Array(await res.arrayBuffer());
     let bin = "";
@@ -91,14 +91,16 @@ export async function toSVG({ outline = true } = {}) {
     return `${open}${ground}${await outlinedLetters(st)}</svg>`;
   }
 
+  /* embedded under the real family name, not the app's alias, so the file
+     still resolves in a viewer that happens to have the font installed */
   const uri = await fontDataUri();
   const face =
-    `<defs><style>@font-face{font-family:"${FONT_FAMILY}";font-weight:700;font-style:normal;` +
+    `<defs><style>@font-face{font-family:"${FONT_FAMILY}";font-weight:${FONT_WEIGHT};font-style:normal;` +
     `src:url(${uri}) format("woff2");}</style></defs>`;
 
   return (
     `${open}${face}${ground}` +
-    `<g font-family="${FONT_FAMILY}, Helvetica, Arial, sans-serif" font-weight="700" ` +
+    `<g font-family='${EXPORT_STACK}' font-weight="${FONT_WEIGHT}" ` +
     `font-size="${st.fontSize}" text-anchor="middle" fill="${paint.ink}">${lettersMarkup(st)}</g></svg>`
   );
 }
@@ -114,7 +116,7 @@ export async function toPNGBlob(scale = 2) {
   const st = state;
   const g = geometry(st);
 
-  await document.fonts.load(`700 ${st.fontSize}px "${FONT_FAMILY}"`);
+  await document.fonts.load(`${FONT_WEIGHT} ${st.fontSize}px "Display"`);
   await document.fonts.ready;
 
   const canvas = document.createElement("canvas");
@@ -129,7 +131,7 @@ export async function toPNGBlob(scale = 2) {
     ctx.fillRect(0, 0, g.w, g.h);
   }
 
-  ctx.font = `700 ${st.fontSize}px "${FONT_FAMILY}", Helvetica, Arial, sans-serif`;
+  ctx.font = `${FONT_WEIGHT} ${st.fontSize}px ${FONT_STACK}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = paint.ink;

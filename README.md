@@ -12,20 +12,44 @@ framework.
 
 ## The typography
 
-The grid is set in **Helvetica Now Display Bold**, loaded as WOFF2.
+The grid is set in **Excelsior Insertio LT**, loaded as WOFF2 — a Linotype
+newspaper legibility serif, which is about right for a form that lives in
+newsprint.
 
-Centring is done on the font's **cap height** (712/1000 em), not on the em box
+Centring is done on the font's **cap height** (787/1000 em), not on the em box
 and not with `dominant-baseline`. A capital therefore sits dead centre in its
 cell, and a row of them reads as one even band — which is the whole visual
 premise. Browsers disagree about `dominant-baseline`, so the baseline is
 computed rather than delegated:
 
 ```
-baseline = cellTop + cellHeight / 2 + (0.712 × fontSize) / 2 + baselineShift
+baseline = cellTop + cellHeight / 2 + (capRatio × fontSize) / 2 + baselineShift
 ```
 
-`Baseline shift` in the Type panel nudges that figure when a layout wants to
-sit a touch high or low.
+Measured: at a 200px size in a 400px cell, `H` renders 157px of ink against a
+predicted cap height of 157.4px, with top and bottom gaps of 122px and 121px.
+Round letters like `O` come out a few pixels taller because they overshoot the
+cap line, as they should.
+
+`Baseline` in the Type panel nudges that figure when a layout wants to sit a
+touch high or low.
+
+### Changing the typeface
+
+Drop a `.ttf` into `font-src/`, remove the old one, and run:
+
+```bash
+pip install fonttools brotli
+python3 tools/extract-glyphs.py
+```
+
+That writes `public/fonts/display.woff2` and `public/fonts/glyphs.json` under
+fixed names — so the stylesheet never changes — and rewrites the generated
+block in `public/js/state.js` with what it read off the font: family name,
+weight, generic fallback, and the cap-height ratio.
+
+Those four are derived rather than typed because they drift silently. A stale
+cap ratio doesn't throw; it just sits every letter slightly off centre.
 
 ## Controls
 
@@ -152,10 +176,11 @@ public/                 everything that gets deployed
   js/input.js           pointer, keyboard, clipboard
   js/controls.js        sidebar bindings
   js/exporters.js       SVG / PNG / text
-  fonts/                WOFF2 + extracted glyph outlines
+  fonts/display.woff2   the face the page loads
+  fonts/glyphs.json     outlines, for the SVG "outlines" export
   _headers              cache and security headers
-font-src/               the TTF the WOFF2 and outlines are built from
-tools/extract-glyphs.py rebuilds both from that TTF
+font-src/               the TTF both are built from
+tools/extract-glyphs.py rebuilds them, and the generated block in state.js
 wrangler.toml           declares public/ as the assets directory
 ```
 
@@ -169,19 +194,15 @@ The board is SVG, which cannot read CSS variables through attributes, so
 change and hands them to the renderer and the exporters. Colour lives in one
 place — the CSS — for chrome and canvas alike.
 
-`public/fonts/glyphs.json` holds SVG path data and advance widths for 125
-glyphs (printable ASCII plus common typographic marks). It is only fetched when
-you export outlines.
+`public/fonts/glyphs.json` holds SVG path data and advance widths for every
+glyph in the charset the tool covers — printable ASCII plus common typographic
+marks, 121 of them in the current face. It is only fetched when you export
+outlines, and anything the font lacks is reported and skipped.
 
-Both it and the WOFF2 are generated — drop a new TTF into `font-src/` and run:
-
-```bash
-pip install fonttools brotli
-python3 tools/extract-glyphs.py
-```
-
-It prints the new font's cap-height ratio; if that differs from 0.712, update
-`CAP_RATIO` in `public/js/state.js` to match or the optical centring will drift.
+On screen the face is loaded under the neutral alias `Display`, which is why
+the stylesheet survives a font swap untouched. Exports name the real family
+instead, so a live-text SVG resolves in a viewer that has the font installed —
+and falls back to the embedded copy when it doesn't.
 
 ## Note on the font
 

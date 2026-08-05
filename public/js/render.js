@@ -6,7 +6,7 @@
    leaves out.
    ============================================================ */
 
-import { state, ui, FONT_FAMILY, CAP_RATIO, currentWord, clueNumbers } from "./state.js";
+import { state, ui, FONT_STACK, FONT_WEIGHT, CAP_RATIO, currentWord, clueNumbers } from "./state.js";
 import { paint } from "./theme.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -157,7 +157,7 @@ export function render(board) {
     cursorLayer +
     selectionLayer +
     (st.numbers ? numbersMarkup(st) : "") +
-    `<g font-family="${FONT_FAMILY}, Helvetica, Arial, sans-serif" font-weight="700" ` +
+    `<g font-family='${FONT_STACK}' font-weight="${FONT_WEIGHT}" ` +
     `font-size="${st.fontSize}" text-anchor="middle" fill="${paint.ink}">${lettersMarkup(st)}</g>`;
 }
 
